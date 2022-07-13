@@ -1,0 +1,24 @@
+{
+    "name": "planes-tracker",
+    "version": "1.0.0",
+    "description": "Saves all the planes flying above the designated area in a sqlite3 database.",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js"
+    },
+    "dependencies": {
+        "axios": "^0.26.1",
+        "better-sqlite3": "^7.5.0",
+        "node-cron": "^3.0.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/LockBlock-dev/planes-tracker.git"
+    },
+    "author": "LockBlock-dev",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/LockBlock-dev/planes-tracker/issues"
+    },
+    "homepage": "https://github.com/LockBlock-dev/planes-tracker#readme"
+}
