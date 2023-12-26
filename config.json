@@ -1,7 +1,9 @@
 {
     "location": {
-        "latitude": 0,
-        "longitude": 0
+        "latitude": 1.234,
+        "longitude": 5.678
     },
-    "precision": 0.1
+    "radiusDistance": 10,
+    "pollRate": 10,
+    "debug": false
 }

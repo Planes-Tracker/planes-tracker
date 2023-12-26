@@ -1,35 +1,52 @@
 # Planes tracker
 
-[![axios](https://img.shields.io/github/package-json/dependency-version/LockBlock-dev/planes-tracker/axios)](https://www.npmjs.com/package/axios) [![node-cron](https://img.shields.io/github/package-json/dependency-version/LockBlock-dev/planes-tracker/node-cron)](https://www.npmjs.com/package/node-cron) [![better-sqlite3](https://img.shields.io/github/package-json/dependency-version/LockBlock-dev/planes-tracker/better-sqlite3)](https://www.npmjs.com/package/better-sqlite3)
-
 [![GitHub stars](https://img.shields.io/github/stars/LockBlock-dev/planes-tracker.svg)](https://github.com/LockBlock-dev/planes-tracker/stargazers)
 
 Saves all the planes flying above the designated area in a sqlite3 database.
 
+## Table of content
+
+-   [**Installation**](#installation)
+-   [**Compiling from source**](#compiling-from-source)
+-   [**Configuration**](#configuration)
+-   [**Usage**](#usage)
+-   [**Credits**](#credits)
+-   [**Copyright**](#copyright)
+
 ## Installation
 
--   Install [NodeJS](https://nodejs.org).
+-   Download [go](https://go.dev/dl/) (go 1.20 required).
 -   Download or clone the project.
--   Run `npm install`.
--   In the [config.json](./config.json), you need to edit the location with your latitude and longitude:
+-   Download the binary from the [Releases](../../releases) or [build it](#compiling-from-source) yourself.
+-   [Configure the tool](#configuration).
 
-```json
-{
-    "location": {
-        "latitude": 0,
-        "longitude": 0
-    },
-    "precision": 0.1
-}
-```
+## Compiling from source
 
--   Run `node index.js` OR `npm start`.
+-   Use [`build.sh`](/build.sh) or use `go build` in [`cmd/planes-tracker/`](/cmd/planes-tracker/)
+
+## Configuration
+
+The config can be found at the root of the project.
+
+-   Open the [`config`](/config.json) in your favorite editor.
+-   Provide the latitude and longitude of the tracking zone center.
+-   Then provide a radius distance (in Km) from the center.
+-   You can change the poll rate (in s) of the tracker.
+
+## Usage
+
+-   With a binary:
+    -   Run `chmod +x planes-tracker`.
+    -   Start the tool with `./planes-tracker`
+    -   You should definetely start it in a screen or daemonize it.
+-   Running from source:
+    -   Start the tool with `go run ./cmd/planes-tracker/main.go` or `cd ./cmd/planes-tracker/ && go run .`
 
 ## Credits
 
 -   [FlightRadar24](https://www.flightradar24.com/)
--   [flightradar24-client](https://www.npmjs.com/package/flightradar24-client)
+-   [flightdb](https://github.com/skypies/flightdb)
 
 ## Copyright
 
-See the [license](/LICENSE)
+See the [license](/LICENSE).
