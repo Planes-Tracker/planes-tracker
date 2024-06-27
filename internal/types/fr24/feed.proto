@@ -188,9 +188,9 @@ message LocationBoundaries {
 }
 
 message Route {
-  optional string from_iata = 1;
-  optional string to_iata = 2;
-  optional string diverted_to_iata = 3;
+  optional string from = 1;
+  optional string to = 2;
+  optional string diverted_to = 3;
 }
 
 enum EmergencyStatus {
@@ -261,6 +261,11 @@ message RouteInfo {
   optional uint32 diverted_to_id = 3;
 }
 
+message AircraftInfo {
+  optional string full_description = 1;
+  optional string msn = 2;
+}
+
 message ExtraFlightInfo {
   optional string flight = 1;
   optional string reg = 2;
@@ -268,16 +273,18 @@ message ExtraFlightInfo {
   optional string type = 4;
   optional int32 squawk = 5;
   optional int32 vspeed = 6;
-  optional string ac_birth_day = 7;
+  optional string age = 7;
   optional int32 country_of_reg = 8;
   optional Schedule schedule = 9;
-  optional uint32 painted_as_id = 10;
+  optional uint32 logo_id = 10;
   optional string airspace = 11;
   optional EmsInfo ems_info = 12;
   optional EmsAvailability ems_availability = 13;
-  optional uint32 operated_by_id = 14;
-  optional uint32 owned_by_id = 15;
-  optional uint32 icao_address = 16;
+  optional uint32 icao_address = 14;
+  optional uint32 operated_by_id = 15;
+  optional bool squawk_availability = 16;
+  optional bool vspeed_availability = 17;
+  optional bool airspace_availability = 18;
 }
 
 enum Icon {
@@ -358,6 +365,7 @@ message FollowFlightResponse{
   optional RouteInfo route = 3;
   optional FlightProgress progress = 4;
   optional uint32 mean_flight_time = 5; // in seconds
+  optional AircraftInfo aircraft_info = 6;
   repeated TrailPoint flight_trail = 10;
 }
 
@@ -397,8 +405,17 @@ message TrailPoint {
   optional uint32 vspd = 7;
 }
 
+message Duration {
+  optional uint32 count = 1;
+}
+
+message Tick {
+  optional uint32 count = 1;
+}
+
 service Feed {
   rpc Echo (Ping) returns (Pong) {}
+  rpc CountDown (Duration) returns (stream Tick) {}
   rpc LiveFeed (LiveFeedRequest) returns (LiveFeedResponse) {}
   rpc Playback (PlaybackRequest) returns (PlaybackResponse) {}
   rpc NearestFlights (NearestFlightsRequest) returns (NearestFlightsResponse) {}

@@ -1,9 +1,13 @@
 {
-    "location": {
-        "latitude": 1.234,
-        "longitude": 5.678
-    },
-    "radiusDistance": 10,
+    "databaseName": "/var/db/planes.db",
     "pollRate": 10,
-    "debug": false
+    "debug": false,
+
+    "location": {
+        "latitude": 12.345,
+        "longitude": 67.89
+    },
+    "radius": {
+        "distance": 15
+    }
 }

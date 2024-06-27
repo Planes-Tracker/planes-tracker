@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	Feed_Echo_FullMethodName              = "/fr24.feed.api.v1.Feed/Echo"
+	Feed_CountDown_FullMethodName         = "/fr24.feed.api.v1.Feed/CountDown"
 	Feed_LiveFeed_FullMethodName          = "/fr24.feed.api.v1.Feed/LiveFeed"
 	Feed_Playback_FullMethodName          = "/fr24.feed.api.v1.Feed/Playback"
 	Feed_NearestFlights_FullMethodName    = "/fr24.feed.api.v1.Feed/NearestFlights"
@@ -33,6 +34,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FeedClient interface {
 	Echo(ctx context.Context, in *Ping, opts ...grpc.CallOption) (*Pong, error)
+	CountDown(ctx context.Context, in *Duration, opts ...grpc.CallOption) (Feed_CountDownClient, error)
 	LiveFeed(ctx context.Context, in *LiveFeedRequest, opts ...grpc.CallOption) (*LiveFeedResponse, error)
 	Playback(ctx context.Context, in *PlaybackRequest, opts ...grpc.CallOption) (*PlaybackResponse, error)
 	NearestFlights(ctx context.Context, in *NearestFlightsRequest, opts ...grpc.CallOption) (*NearestFlightsResponse, error)
@@ -56,6 +58,38 @@ func (c *feedClient) Echo(ctx context.Context, in *Ping, opts ...grpc.CallOption
 		return nil, err
 	}
 	return out, nil
+}
+
+func (c *feedClient) CountDown(ctx context.Context, in *Duration, opts ...grpc.CallOption) (Feed_CountDownClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Feed_ServiceDesc.Streams[0], Feed_CountDown_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &feedCountDownClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Feed_CountDownClient interface {
+	Recv() (*Tick, error)
+	grpc.ClientStream
+}
+
+type feedCountDownClient struct {
+	grpc.ClientStream
+}
+
+func (x *feedCountDownClient) Recv() (*Tick, error) {
+	m := new(Tick)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *feedClient) LiveFeed(ctx context.Context, in *LiveFeedRequest, opts ...grpc.CallOption) (*LiveFeedResponse, error) {
@@ -104,7 +138,7 @@ func (c *feedClient) FetchSearchIndex(ctx context.Context, in *FetchSearchIndexR
 }
 
 func (c *feedClient) FollowFlight(ctx context.Context, in *FollowFlightRequest, opts ...grpc.CallOption) (Feed_FollowFlightClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Feed_ServiceDesc.Streams[0], Feed_FollowFlight_FullMethodName, opts...)
+	stream, err := c.cc.NewStream(ctx, &Feed_ServiceDesc.Streams[1], Feed_FollowFlight_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -140,6 +174,7 @@ func (x *feedFollowFlightClient) Recv() (*FollowFlightResponse, error) {
 // for forward compatibility
 type FeedServer interface {
 	Echo(context.Context, *Ping) (*Pong, error)
+	CountDown(*Duration, Feed_CountDownServer) error
 	LiveFeed(context.Context, *LiveFeedRequest) (*LiveFeedResponse, error)
 	Playback(context.Context, *PlaybackRequest) (*PlaybackResponse, error)
 	NearestFlights(context.Context, *NearestFlightsRequest) (*NearestFlightsResponse, error)
@@ -155,6 +190,9 @@ type UnimplementedFeedServer struct {
 
 func (UnimplementedFeedServer) Echo(context.Context, *Ping) (*Pong, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Echo not implemented")
+}
+func (UnimplementedFeedServer) CountDown(*Duration, Feed_CountDownServer) error {
+	return status.Errorf(codes.Unimplemented, "method CountDown not implemented")
 }
 func (UnimplementedFeedServer) LiveFeed(context.Context, *LiveFeedRequest) (*LiveFeedResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LiveFeed not implemented")
@@ -203,6 +241,27 @@ func _Feed_Echo_Handler(srv interface{}, ctx context.Context, dec func(interface
 		return srv.(FeedServer).Echo(ctx, req.(*Ping))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _Feed_CountDown_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(Duration)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(FeedServer).CountDown(m, &feedCountDownServer{stream})
+}
+
+type Feed_CountDownServer interface {
+	Send(*Tick) error
+	grpc.ServerStream
+}
+
+type feedCountDownServer struct {
+	grpc.ServerStream
+}
+
+func (x *feedCountDownServer) Send(m *Tick) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 func _Feed_LiveFeed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -349,6 +408,11 @@ var Feed_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "CountDown",
+			Handler:       _Feed_CountDown_Handler,
+			ServerStreams: true,
+		},
 		{
 			StreamName:    "FollowFlight",
 			Handler:       _Feed_FollowFlight_Handler,
