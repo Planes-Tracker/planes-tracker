@@ -117,23 +117,23 @@ func (app *App) watch() {
 			continue
 		}
 
-		// ToDo: refactor
+		updates := map[string]interface{}{}
 
-		if flight.Flight == nil && flightRecord.Flight.Flight != flight.Flight {
-			app.DB.Model(&flight).Update("flight", flightRecord.Flight.Flight)
+		scheduleForUpdateIfNeeded := func(fieldName string, currentValue interface{}, newValue interface{}) {
+			if currentValue == nil && newValue != currentValue {
+				updates[fieldName] = newValue
+			}
 		}
 
-		if flight.Origin == nil && flightRecord.Flight.Origin != flight.Origin {
-			app.DB.Model(&flight).Update("origin", flightRecord.Flight.Origin)
+		scheduleForUpdateIfNeeded("flight", flight.Flight, flightRecord.Flight.Flight)
+		scheduleForUpdateIfNeeded("origin", flight.Origin, flightRecord.Flight.Origin)
+		scheduleForUpdateIfNeeded("destination", flight.Destination, flightRecord.Flight.Destination)
+		scheduleForUpdateIfNeeded("diverted_to", flight.DivertedTo, flightRecord.Flight.DivertedTo)
+
+		if len(updates) > 0 {
+			app.DB.Model(&flight).Updates(updates)
 		}
 
-		if flight.Destination == nil && flightRecord.Flight.Destination != flight.Destination {
-			app.DB.Model(&flight).Update("destination", flightRecord.Flight.Destination)
-		}
-
-		if flight.DivertedTo == nil && flightRecord.Flight.DivertedTo != flight.DivertedTo {
-			app.DB.Model(&flight).Update("diverted_to", flightRecord.Flight.DivertedTo)
-		}
 
 		err := app.DB.Model(&flight).Association("FlightPoints").Append(
 			&entities.FlightPoint{
