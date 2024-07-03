@@ -1,9 +1,11 @@
 package database
 
 import (
+	"fmt"
+	"os"
 	"time"
 
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
@@ -14,7 +16,17 @@ type Database struct {
 	*gorm.DB
 }
 
-func InitDB(connectionAddr string, verbose bool) (*Database, error) {
+func getEnvWithDefault(key string, defaultVal string) string {
+	val := os.Getenv(key)
+
+	if val == "" {
+		return defaultVal
+	}
+
+	return val
+}
+
+func InitDB(verbose bool) (*Database, error) {
 	var dbLogger logger.Interface
 	
 	if verbose {
@@ -23,10 +35,22 @@ func InitDB(connectionAddr string, verbose bool) (*Database, error) {
 		dbLogger = logger.Default.LogMode(logger.Silent)
 	}
 
-    db, err := gorm.Open(
-		sqlite.Open(connectionAddr),
+	postgresUser := getEnvWithDefault("POSTGRES_USER", "postgres")
+	postgresDatabase := getEnvWithDefault("POSTGRES_DB", postgresUser)
+
+	db, err := gorm.Open(
+		postgres.Open(
+			fmt.Sprintf(
+				"host=postgres user=%s password=%s dbname=%s port=5432 sslmode=disable TimeZone=%s",
+				postgresUser,
+				os.Getenv("POSTGRES_PASSWORD"),
+				postgresDatabase,
+				getEnvWithDefault("POSTGRES_TIMEZONE", "UTC"),
+			),
+		),
 		&gorm.Config{
 			Logger: dbLogger,
+			TranslateError: true,
 		},
 	)
 	if err != nil {

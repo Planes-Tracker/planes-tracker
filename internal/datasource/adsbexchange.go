@@ -114,7 +114,7 @@ func (src *ADSBExchangeDataSource) FetchFlights(ch chan<- types.FlightRecord, lo
 			VerticalSpeed: proto.Int32(int32(a.BaroRate) * 8),
 			OnGround: proto.Bool(a.BaroAlt <= 0),
 			SquawkCode: proto.String(fmt.Sprintf("%04X", a.Squawk)),
-			Model: proto.String(string(a.TypeCode[:])),
+			Model: proto.String(apiBufferToString(a.TypeCode[:])),
 			ICAOAddress: proto.String(fmt.Sprintf("%06X", a.Hex)),
 		}
 

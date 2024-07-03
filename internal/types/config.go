@@ -6,12 +6,11 @@ import (
 )
 
 type Config struct {
-	DatabaseName    string      `json:"databaseName"`
-	PollRate        int         `json:"pollRate"`
-	Debug           bool        `json:"debug"`
+	PollRate int         `json:"pollRate"`
+	Debug    bool        `json:"debug"`
 
-	Location        Coordinates `json:"location"`
-	Radius          Radius      `json:"radius"`
+	Location Coordinates `json:"location"`
+	Radius   Radius      `json:"radius"`
 }
 
 func NewConfigFromFile(filePath string) (*Config, error) {

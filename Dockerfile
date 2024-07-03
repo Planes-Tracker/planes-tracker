@@ -31,6 +31,4 @@ COPY --from=build /bin/planes-tracker /bin/planes-tracker
 RUN set -eux; \
     apk add libc6-compat
 
-VOLUME ["/var/db"]
-
 CMD [ "/bin/planes-tracker" ]

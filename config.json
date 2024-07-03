@@ -1,5 +1,4 @@
 {
-    "databaseName": "/var/db/planes.db",
     "pollRate": 10,
     "debug": false,
 

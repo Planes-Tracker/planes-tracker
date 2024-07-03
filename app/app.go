@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -9,7 +10,8 @@ import (
 	"github.com/LockBlock-dev/planes-tracker/internal/datasource"
 	"github.com/LockBlock-dev/planes-tracker/internal/entities"
 	"github.com/LockBlock-dev/planes-tracker/internal/types"
-	"github.com/mattn/go-sqlite3"
+	"github.com/joho/godotenv"
+	"gorm.io/gorm"
 )
 
 type App struct {
@@ -21,6 +23,12 @@ type App struct {
 }
 
 func NewApp() (*App, error) {
+	err := godotenv.Load()
+	if err != nil {
+		// Assume we are running inside Docker
+		log.Print(fmt.Errorf("failed to load .env file: %w", err))
+	}
+
 	config, err := types.NewConfigFromFile("./config.json")
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -50,7 +58,7 @@ func NewApp() (*App, error) {
 	}
 
 	verbose := false
-    db, err := database.InitDB(app.Config.DatabaseName, verbose)
+    db, err := database.InitDB(verbose)
     if err != nil {
         return nil, fmt.Errorf(
 			"failed to initialize the database: %w",
@@ -107,10 +115,8 @@ func (app *App) watch() {
 			&flight,
 		)
 
-		if result.Error != nil {		
-			sqlErr, ok := result.Error.(sqlite3.Error)
-			
-			if (ok && sqlErr.Code != sqlite3.ErrConstraint) || !ok {
+		if result.Error != nil {
+			if result.Error != nil && errors.Is(result.Error, gorm.ErrDuplicatedKey) {
 				log.Printf("Failed to insert flights into the database: %v\n", result.Error)
 			}
 
@@ -149,11 +155,7 @@ func (app *App) watch() {
 		)
 		
 		if err != nil {
-			_, ok := err.(sqlite3.Error)
-
-			if !ok {
-				log.Printf("Failed to append flight point to flight with id %d, error: %v\n", flight.FlightId, err)
-			}
+			log.Printf("Failed to append flight point to flight with id %d, error: %v\n", flight.FlightId, err)
 
 			continue
 		}
