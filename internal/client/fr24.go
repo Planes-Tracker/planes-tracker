@@ -49,7 +49,7 @@ func (c *FR24Client) FetchFlights(location *types.Coordinates, radius *types.Rad
 			Lon: float32(location.Lon),
 		},
 		Radius: proto.Uint32(radius.AsMeters()),
-		Limit: proto.Uint32(500),
+		Limit:  proto.Uint32(500),
 	}
 
 	return c.client.NearestFlights(c.context, req)
@@ -58,7 +58,7 @@ func (c *FR24Client) FetchFlights(location *types.Coordinates, radius *types.Rad
 func (c *FR24Client) FetchFlight(flightId uint32) (*fr24.LiveFeedResponse, error) {
 	req := &fr24.LiveFeedRequest{
 		SelectedFlightIds: []uint32{flightId},
-		Limit: proto.Uint32(1),
+		Limit:             proto.Uint32(1),
 	}
 
 	return c.client.LiveFeed(c.context, req)

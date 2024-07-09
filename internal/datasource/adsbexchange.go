@@ -17,18 +17,13 @@ import (
 )
 
 func apiBufferToString(slice []byte) string {
-	n := bytes.IndexByte(slice[:], 0)
-
-	if n != -1 {
-		return string(slice[:n])
-	}
-
-	return string(slice[:])
+	return string(bytes.Trim(slice, "\x00")[:])
 }
 
 type ADSBExchangeDataSource struct {
 	Client  *client.ADSBExchangeClient
 	Decoder *zstd.Decoder
+	name    string
 }
 
 func NewADSBExchangeDataSource() (*ADSBExchangeDataSource, error) {
@@ -47,15 +42,16 @@ func NewADSBExchangeDataSource() (*ADSBExchangeDataSource, error) {
 			err,
 		)
 	}
-	
+
 	return &ADSBExchangeDataSource{
 		Client:  client,
 		Decoder: decoder,
+		name:    "ADS-B Exchange HTTP",
 	}, nil
 }
 
 func (src *ADSBExchangeDataSource) Name() string {
-	return "ADS-B Exchange HTTP"
+	return src.name
 }
 
 func (src *ADSBExchangeDataSource) FetchFlights(ch chan<- types.FlightRecord, location *types.Coordinates, radius *types.Radius) (int, error) {
@@ -104,23 +100,23 @@ func (src *ADSBExchangeDataSource) FetchFlights(ch chan<- types.FlightRecord, lo
 
 		// https://github.com/ADSBexchange/tar1090/blob/master/html/formatter.js#L402
 		flight := types.Flight{
-			Registration: proto.String(strings.TrimRight(apiBufferToString(a.Registration[:]), " ")),
-			Callsign: proto.String(strings.TrimRight(apiBufferToString(a.Callsign[:]), " ")),
-			Latitude: proto.Float32(float32(a.Lat) / 1e6),
-			Longitude: proto.Float32(float32(a.Lon) / 1e6),
-			Altitude: proto.Int32(int32(a.BaroAlt) * 25),
-			Track: proto.Int32(int32(a.Track) / 90),
-			Speed: proto.Int32(int32(a.GS) / 10),
+			Registration:  proto.String(strings.TrimRight(apiBufferToString(a.Registration[:]), " ")),
+			Callsign:      proto.String(strings.TrimRight(apiBufferToString(a.Callsign[:]), " ")),
+			Latitude:      proto.Float32(float32(a.Lat) / 1e6),
+			Longitude:     proto.Float32(float32(a.Lon) / 1e6),
+			Altitude:      proto.Int32(int32(a.BaroAlt) * 25),
+			Track:         proto.Int32(int32(a.Track) / 90),
+			Speed:         proto.Int32(int32(a.GS) / 10),
 			VerticalSpeed: proto.Int32(int32(a.BaroRate) * 8),
-			OnGround: proto.Bool(a.BaroAlt <= 0),
-			SquawkCode: proto.String(fmt.Sprintf("%04X", a.Squawk)),
-			Model: proto.String(apiBufferToString(a.TypeCode[:])),
-			ICAOAddress: proto.String(fmt.Sprintf("%06X", a.Hex)),
+			OnGround:      proto.Bool(a.BaroAlt <= 0),
+			SquawkCode:    proto.String(fmt.Sprintf("%04X", a.Squawk)),
+			Model:         proto.String(apiBufferToString(a.TypeCode[:])),
+			ICAOAddress:   proto.String(fmt.Sprintf("%06X", a.Hex)),
 		}
 
 		ch <- types.FlightRecord{
 			Datasource: src.Name(),
-			Flight: flight,
+			Flight:     flight,
 		}
 	}
 

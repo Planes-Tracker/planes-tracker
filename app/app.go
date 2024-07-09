@@ -36,7 +36,7 @@ func NewApp() (*App, error) {
 			err,
 		)
 	}
-	
+
 	fr24DataSource, err := datasource.NewFR24DataSource()
 	if err != nil {
 		log.Println(err)
@@ -57,18 +57,17 @@ func NewApp() (*App, error) {
 		Channel: make(chan types.FlightRecord),
 	}
 
-	verbose := false
-    db, err := database.InitDB(verbose)
-    if err != nil {
-        return nil, fmt.Errorf(
+	db, err := database.InitDB(app.Config.Debug)
+	if err != nil {
+		return nil, fmt.Errorf(
 			"failed to initialize the database: %w",
 			err,
 		)
-    }
+	}
 
 	app.DB = db
 
-    return &app, nil
+	return &app, nil
 }
 
 func (app *App) Start() {
@@ -87,8 +86,8 @@ func (app *App) Start() {
 
 func (app *App) Stop() {
 	if err := app.DB.Close(); err != nil {
-        log.Printf("Failed to close the database: %v\n", err)
-    }
+		log.Printf("Failed to close the database: %v\n", err)
+	}
 
 	close(app.Channel)
 }
@@ -140,7 +139,6 @@ func (app *App) watch() {
 			app.DB.Model(&flight).Updates(updates)
 		}
 
-
 		err := app.DB.Model(&flight).Association("FlightPoints").Append(
 			&entities.FlightPoint{
 				Latitude:      flightRecord.Flight.Latitude,
@@ -153,7 +151,7 @@ func (app *App) watch() {
 				SquawkCode:    flightRecord.Flight.SquawkCode,
 			},
 		)
-		
+
 		if err != nil {
 			log.Printf("Failed to append flight point to flight with id %d, error: %v\n", flight.FlightId, err)
 
@@ -178,5 +176,5 @@ func (app *App) run() {
 		if app.Config.Debug {
 			log.Printf("Got %d flights from %s\n", count, dataSource.Name())
 		}
-	}	
+	}
 }

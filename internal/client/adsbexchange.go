@@ -8,12 +8,12 @@ import (
 )
 
 type ADSBExchangeClient struct {
-	client  *http.Client
+	client *http.Client
 }
 
 func NewADSBExchangeClient() (*ADSBExchangeClient, error) {
 	return &ADSBExchangeClient{
-		client:  &http.Client{},
+		client: &http.Client{},
 	}, nil
 }
 

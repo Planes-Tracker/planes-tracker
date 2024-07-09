@@ -6,8 +6,8 @@ import (
 )
 
 type Config struct {
-	PollRate int         `json:"pollRate"`
-	Debug    bool        `json:"debug"`
+	PollRate int  `json:"pollRate"`
+	Debug    bool `json:"debug"`
 
 	Location Coordinates `json:"location"`
 	Radius   Radius      `json:"radius"`
@@ -23,8 +23,6 @@ func NewConfigFromFile(filePath string) (*Config, error) {
 	if err := json.Unmarshal(data, &config); err != nil {
 		return nil, err
 	}
-
-
 
 	return &config, nil
 }

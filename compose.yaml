@@ -6,11 +6,11 @@ services:
             db:
                 condition: service_healthy
         environment:
+            POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
             POSTGRES_USER: ${POSTGRES_USER:-postgres}
             POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?error}"
             POSTGRES_DB: ${POSTGRES_DB:-${POSTGRES_USER:-postgres}}
-
-            POSTGRES_PORT: 5432
+            POSTGRES_PORT: ${POSTGRES_PORT:-5432}
             POSTGRES_TIMEZONE: ${POSTGRES_TIMEZONE:-UTC}
 
     db:
@@ -29,7 +29,7 @@ services:
         expose:
             - "5432"
         ports:
-            - ${POSTGRES_PORT:-5432}:5432
+            - ${EXTERNAL_POSTGRES_PORT:-5432}:5432
         healthcheck:
             test:
                 [

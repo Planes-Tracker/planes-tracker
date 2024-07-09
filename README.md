@@ -1,6 +1,6 @@
 # Planes tracker
 
-Saves all the planes flying above the designated area in a sqlite3 database.
+Saves all the planes flying above the designated area in a database.
 
 See the [changelog](/CHANGELOG.md) for the latest updates.
 
@@ -37,13 +37,14 @@ The config can be found at the root of the project.
 -   Open the [`config`](/config.json) in your favorite editor.
 -   Provide the latitude and longitude of the tracking zone center.
 -   Then provide a radius distance (in Km) from the center.
--   You can change the poll rate (in seconds) of the tracker and the database file path (default is being used in Docker).
+-   You can change the poll rate (in seconds) of the tracker.
+
+Database config must be set inside a `.env` file at the root of the project. An exemple is provided inside [`.env.example`](/.env.example)
 
 ## Config details
 
 | Item               | Values                  | Meaning                                                           |
 | ------------------ | ----------------------- | ----------------------------------------------------------------- |
-| databaseName       | `text`                  | Database file path                                                |
 | pollRate           | `number`                | Tracker poll rate (in seconds)                                    |
 | debug              | `boolean`               | Enable debug logs                                                 |
 | location.latitude  | `floating point number` | Latitude of the center of the area to be covered                  |

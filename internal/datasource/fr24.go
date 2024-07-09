@@ -10,6 +10,7 @@ import (
 
 type FR24DataSource struct {
 	Client *client.FR24Client
+	name   string
 }
 
 func NewFR24DataSource() (*FR24DataSource, error) {
@@ -20,14 +21,15 @@ func NewFR24DataSource() (*FR24DataSource, error) {
 			err,
 		)
 	}
-	
+
 	return &FR24DataSource{
 		Client: client,
+		name:   "Flightradar24 gRPC",
 	}, nil
 }
 
 func (src *FR24DataSource) Name() string {
-	return "Flightradar24 gRPC"
+	return src.name
 }
 
 func (src *FR24DataSource) FetchFlights(ch chan<- types.FlightRecord, location *types.Coordinates, radius *types.Radius) (int, error) {
@@ -52,26 +54,15 @@ func (src *FR24DataSource) FetchFlights(ch chan<- types.FlightRecord, location *
 		extraInfo := data.ExtraInfo
 
 		if extraInfo != nil {
-			flight.Registration  = extraInfo.Reg
-			flight.Flight        = extraInfo.Flight
+			flight.Registration = extraInfo.Reg
+			flight.Flight = extraInfo.Flight
 			flight.VerticalSpeed = extraInfo.Vspeed
-			flight.Model         = extraInfo.Type
+			flight.Model = extraInfo.Type
 
 			if extraInfo.Route != nil {
-				flight.Origin      = extraInfo.Route.From
+				flight.Origin = extraInfo.Route.From
 				flight.Destination = extraInfo.Route.To
-				flight.DivertedTo  = extraInfo.Route.DivertedTo
-			}
-	
-			if extraInfo.Squawk != nil {
-				flight.SquawkCode = proto.String(fmt.Sprintf("%04X", *extraInfo.Squawk))
-
-				fmt.Printf(
-					"Got Sqawk code!\n\tCallsign: %s\n\tSqawk code: %d\n\tString version: %s\n",
-					*data.Callsign,
-					*extraInfo.Squawk,
-					*flight.SquawkCode,
-				)
+				flight.DivertedTo = extraInfo.Route.DivertedTo
 			}
 		}
 
@@ -80,15 +71,21 @@ func (src *FR24DataSource) FetchFlights(ch chan<- types.FlightRecord, location *
 			if err == nil && len(resp.SelectedFlights) > 0 {
 				extraInfo := resp.SelectedFlights[0].ExtraInfo
 
-				if extraInfo != nil && extraInfo.IcaoAddress != nil {
-					flight.ICAOAddress = proto.String(fmt.Sprintf("%06X", *extraInfo.IcaoAddress))
+				if extraInfo != nil {
+					if extraInfo.IcaoAddress != nil {
+						flight.ICAOAddress = proto.String(fmt.Sprintf("%06X", *extraInfo.IcaoAddress))
+					}
+
+					if extraInfo.Squawk != nil {
+						flight.SquawkCode = proto.String(fmt.Sprintf("%04X", *extraInfo.Squawk))
+					}
 				}
 			}
 		}
 
 		ch <- types.FlightRecord{
 			Datasource: src.Name(),
-			Flight: flight,
+			Flight:     flight,
 		}
 	}
 
