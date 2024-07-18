@@ -21,7 +21,7 @@ You can [use Docker](#usage) or install this app manually. Here's how:
 -   Download [go](https://go.dev/dl/) (go 1.20 required).
 -   Download or clone the project.
 -   Download the binary from the [Releases](../../releases) or [build it](#compiling-from-source) yourself.
--   [Configure the tool](#configuration).
+-   [Configure the app](#configuration).
 
 ## Compiling from source
 
@@ -32,30 +32,25 @@ You can either:
 
 ## Configuration
 
-The config can be found at the root of the project.
-
--   Open the [`config`](/config.json) in your favorite editor.
--   Provide the latitude and longitude of the tracking zone center.
--   Then provide a radius distance (in Km) from the center.
--   You can change the poll rate (in seconds) of the tracker.
-
-Database config must be set inside a `.env` file at the root of the project. An exemple is provided inside [`.env.example`](/.env.example)
+The configuration details must be set inside a `.env` file at the root of the project. An exemple is provided inside [`.env.example`](/.env.example).
 
 ## Config details
 
-| Item               | Values                  | Meaning                                                           |
-| ------------------ | ----------------------- | ----------------------------------------------------------------- |
-| pollRate           | `number`                | Tracker poll rate (in seconds)                                    |
-| debug              | `boolean`               | Enable debug logs                                                 |
-| location.latitude  | `floating point number` | Latitude of the center of the area to be covered                  |
-| location.longitude | `floating point number` | Longitude of the center of the area to be covered                 |
-| radius.distance    | `number`                | Radius distance from the center of the area to be covered (in Km) |
+| Item                         | Values                  | Meaning                                                           |
+| ---------------------------- | ----------------------- | ----------------------------------------------------------------- |
+| `TRACKER_POLL_RATE`          | `number`                | Tracker poll rate (in seconds)                                    |
+| `TRACKER_DEBUG`              | `boolean`               | Enable debug logs                                                 |
+| `TRACKER_LOCATION_LATITUDE`  | `floating point number` | Latitude of the center of the area to be covered                  |
+| `TRACKER_LOCATION_LONGITUDE` | `floating point number` | Longitude of the center of the area to be covered                 |
+| `TRACKER_RADIUS_DISTANCE`    | `number`                | Radius distance from the center of the area to be covered (in Km) |
 
 ## Usage
 
+If not running the docker compose, you also need to run a postgres database yourself.
+
 -   With docker:
     -   Build the image
-    -   Start a container
+    -   Use docker compose to start both containers
 -   With a binary:
     -   Run `chmod +x planes-tracker`.
     -   Start the tool with `./planes-tracker`

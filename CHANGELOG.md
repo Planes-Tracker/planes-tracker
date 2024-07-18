@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2024-07-18
+
+### Added
+
+-   Added rows can't contain empty strings anymore and will use NULL value instead
+
+### Changed
+
+-   Unique flights index now includes origin, destination and flight number
+-   Configuration with env vars only
+-   Prevent duplicated flight points
+
 ## [3.1.0] - 2024-07-09
 
 ### Changed

@@ -13,6 +13,12 @@ services:
             POSTGRES_PORT: ${POSTGRES_PORT:-5432}
             POSTGRES_TIMEZONE: ${POSTGRES_TIMEZONE:-UTC}
 
+            TRACKER_POLL_RATE: ${TRACKER_POLL_RATE:-10}
+            TRACKER_DEBUG: ${TRACKER_DEBUG:-false}
+            TRACKER_LOCATION_LATITUDE: ${TRACKER_LOCATION_LATITUDE:?error}
+            TRACKER_LOCATION_LONGITUDE: ${TRACKER_LOCATION_LONGITUDE:?error}
+            TRACKER_RADIUS_DISTANCE: ${TRACKER_RADIUS_DISTANCE:?error}
+
     db:
         image: "postgres:16.3-alpine"
         container_name: postgres

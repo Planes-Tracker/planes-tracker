@@ -6,12 +6,14 @@ import (
 	"log"
 	"time"
 
+	"github.com/LockBlock-dev/planes-tracker/config"
 	"github.com/LockBlock-dev/planes-tracker/internal/database"
 	"github.com/LockBlock-dev/planes-tracker/internal/datasource"
 	"github.com/LockBlock-dev/planes-tracker/internal/entities"
 	"github.com/LockBlock-dev/planes-tracker/internal/types"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type App struct {
@@ -25,17 +27,11 @@ type App struct {
 func NewApp() (*App, error) {
 	err := godotenv.Load()
 	if err != nil {
-		// Assume we are running inside Docker
 		log.Print(fmt.Errorf("failed to load .env file: %w", err))
+		log.Println("Assuming we are running inside Docker...")
 	}
 
-	config, err := types.NewConfigFromFile("./config.json")
-	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to load configuration file: %w",
-			err,
-		)
-	}
+	appConfig := config.MakeConfigFromEnv()
 
 	fr24DataSource, err := datasource.NewFR24DataSource()
 	if err != nil {
@@ -48,8 +44,8 @@ func NewApp() (*App, error) {
 	}
 
 	app := App{
-		Config: config,
-		Ticker: time.NewTicker(time.Duration(config.PollRate) * time.Second),
+		Config: appConfig,
+		Ticker: time.NewTicker(time.Duration(appConfig.PollRate) * time.Second),
 		DataSources: []types.DataSource{
 			fr24DataSource,
 			adsbexchangeDataSource,
@@ -92,23 +88,31 @@ func (app *App) Stop() {
 	close(app.Channel)
 }
 
+func preventEmptyString(s *string) *string {
+	if s != nil && *s == "" {
+		return nil
+	}
+
+	return s
+}
+
 func (app *App) watch() {
 	for flightRecord := range app.Channel {
 		var flight entities.Flight
 
 		result := app.DB.Where(
 			&entities.Flight{
-				Registration: flightRecord.Flight.Registration,
-				Callsign:     flightRecord.Flight.Callsign,
-				ICAOAddress:  flightRecord.Flight.ICAOAddress,
+				Registration: preventEmptyString(flightRecord.Flight.Registration),
+				Callsign:     preventEmptyString(flightRecord.Flight.Callsign),
+				ICAOAddress:  preventEmptyString(flightRecord.Flight.ICAOAddress),
 			},
 		).Attrs(
 			&entities.Flight{
-				Flight:      flightRecord.Flight.Flight,
-				Origin:      flightRecord.Flight.Origin,
-				Destination: flightRecord.Flight.Destination,
-				DivertedTo:  flightRecord.Flight.DivertedTo,
-				Model:       flightRecord.Flight.Model,
+				Flight:      preventEmptyString(flightRecord.Flight.Flight),
+				Origin:      preventEmptyString(flightRecord.Flight.Origin),
+				Destination: preventEmptyString(flightRecord.Flight.Destination),
+				DivertedTo:  preventEmptyString(flightRecord.Flight.DivertedTo),
+				Model:       preventEmptyString(flightRecord.Flight.Model),
 			},
 		).FirstOrCreate(
 			&flight,
@@ -130,13 +134,29 @@ func (app *App) watch() {
 			}
 		}
 
-		scheduleForUpdateIfNeeded("flight", flight.Flight, flightRecord.Flight.Flight)
-		scheduleForUpdateIfNeeded("origin", flight.Origin, flightRecord.Flight.Origin)
-		scheduleForUpdateIfNeeded("destination", flight.Destination, flightRecord.Flight.Destination)
-		scheduleForUpdateIfNeeded("diverted_to", flight.DivertedTo, flightRecord.Flight.DivertedTo)
+		scheduleForUpdateIfNeeded("flight", flight.Flight, preventEmptyString(flightRecord.Flight.Flight))
+		scheduleForUpdateIfNeeded("origin", flight.Origin, preventEmptyString(flightRecord.Flight.Origin))
+		scheduleForUpdateIfNeeded("destination", flight.Destination, preventEmptyString(flightRecord.Flight.Destination))
+		scheduleForUpdateIfNeeded("diverted_to", flight.DivertedTo, preventEmptyString(flightRecord.Flight.DivertedTo))
 
 		if len(updates) > 0 {
 			app.DB.Model(&flight).Updates(updates)
+		}
+
+		var recentFlightPoint entities.FlightPoint
+
+		app.DB.Where(
+			&entities.FlightPoint{FlightId: flight.FlightId},
+		).Order(
+			clause.OrderByColumn{Column: clause.Column{Name: "created_at"}, Desc: true},
+		).First(&recentFlightPoint)
+
+		if recentFlightPoint.FlightPointId != 0 {
+			timeElapsed := time.Since(recentFlightPoint.CreatedAt)
+			if timeElapsed < time.Duration(app.Config.PollRate/2)*time.Second {
+				// skip saving duplicated flight point
+				continue
+			}
 		}
 
 		err := app.DB.Model(&flight).Association("FlightPoints").Append(

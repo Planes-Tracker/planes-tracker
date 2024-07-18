@@ -1,29 +1,18 @@
 package database
 
 import (
-	"fmt"
-	"os"
 	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
+	"github.com/LockBlock-dev/planes-tracker/config"
 	"github.com/LockBlock-dev/planes-tracker/internal/entities"
 )
 
 type Database struct {
 	*gorm.DB
-}
-
-func getEnvWithDefault(key string, defaultVal string) string {
-	val := os.Getenv(key)
-
-	if val == "" {
-		return defaultVal
-	}
-
-	return val
 }
 
 func InitDB(verbose bool) (*Database, error) {
@@ -35,19 +24,9 @@ func InitDB(verbose bool) (*Database, error) {
 		dbLogger = logger.Default.LogMode(logger.Silent)
 	}
 
-	postgresUser := getEnvWithDefault("POSTGRES_USER", "postgres")
-
 	db, err := gorm.Open(
 		postgres.Open(
-			fmt.Sprintf(
-				"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=%s",
-				getEnvWithDefault("POSTGRES_HOST", "postgres"),
-				postgresUser,
-				os.Getenv("POSTGRES_PASSWORD"),
-				getEnvWithDefault("POSTGRES_DB", postgresUser),
-				getEnvWithDefault("POSTGRES_PORT", "5432"),
-				getEnvWithDefault("POSTGRES_TIMEZONE", "UTC"),
-			),
+			config.DatabaseDSN(),
 		),
 		&gorm.Config{
 			Logger:         dbLogger,

@@ -8,6 +8,7 @@ COPY go.mod .
 COPY go.sum .
 COPY main.go .
 COPY ./app app/
+COPY ./config config/
 COPY ./internal internal/
 
 RUN set -eux; \
@@ -25,7 +26,6 @@ FROM alpine
 
 WORKDIR /app
 
-COPY config.json .
 COPY --from=build /bin/planes-tracker /bin/planes-tracker
 
 RUN set -eux; \
